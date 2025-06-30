@@ -56,6 +56,8 @@ export class PricingEngine {
     if (!components.labor) return 0;
     
     let laborTotal = 0;
+
+   
     
     // Special flooring handling (since it was problematic)
     laborTotal += this.calculateFlooringLabor(components, data, room, sqft, items, traceLog);
@@ -110,6 +112,22 @@ export class PricingEngine {
   }
   
   static calculateLaborComponent(laborType, laborConfig, data, room, sqft, traceLog) {
+
+    // Debug logging
+    traceLog.push(`DEBUG: Processing labor type: ${laborType}`);
+
+    // Special case for demolition - use project type instead of room-specific choice
+    if (laborType === 'demolition' && typeof laborConfig === 'object' && data.projectType) {
+      const userChoice = data.projectType;
+      if (laborConfig[userChoice] && laborConfig[userChoice].perSqFt !== undefined) {
+        const cost = laborConfig[userChoice].perSqFt * sqft;
+        traceLog.push(`Demolition (${userChoice}): $${laborConfig[userChoice].perSqFt} × ${sqft} = $${cost}`);
+        return cost;
+      }
+      traceLog.push(`No demolition cost for project type: ${userChoice}`);
+      return 0;
+    }
+
     // Fixed base cost
     if (laborConfig.base !== undefined) {
       traceLog.push(`${this.formatName(laborType)}: $${laborConfig.base}`);

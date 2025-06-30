@@ -4,7 +4,12 @@
 export const PRICING_COMPONENTS = {
   Kitchen: {
     labor: {
-      demolition: { perSqFt: 12, description: "Demo existing kitchen" },
+      demolition: { 
+        "Update (cosmetic changes)": { perSqFt: 0 },  // no demo needed
+        "Partial Renovation": { perSqFt: 2 },  // Light demo
+        "Full Renovation": { perSqFt: 4 },  // Full demo
+        description: "Demolition work"
+      },
       flooring_install: { 
         "Ceramic tile": { perSqFt: 8 },
         "Luxury vinyl plank": { perSqFt: 6 },

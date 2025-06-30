@@ -3,7 +3,7 @@
 
 export const DECISION_TREE = {
   initial: {
-    question: "Which room would you like to work on?",
+    question: "Hi, this app will walk you through getting an estimate for an inderior design project. Which room would you like to work on?",
     options: ["Kitchen", "Living Room", "Bedroom", "Bathroom"],
     next: "room_selected"
   },

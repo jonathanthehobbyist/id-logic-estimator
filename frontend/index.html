@@ -1,3 +1,9 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interior Design Consultation</title>
     <style>
         * {
             margin: 0;
@@ -82,11 +88,11 @@
             border-radius: 20px;
             outline: none;
             font-size: 16px;
-            display: none; /* Hidden by default */
+            display: none;
         }
 
         .chat-input.show {
-            display: block; /* Show when needed */
+            display: block;
         }
 
         .chat-input:focus {
@@ -127,6 +133,7 @@
             flex: 1;
             padding: 20px;
             overflow-y: auto;
+            position: relative;
         }
 
         .pricing-summary {
@@ -137,24 +144,64 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        .pricing-total {
-            font-size: 24px;
-            font-weight: bold;
-            color: #28a745;
-            text-align: center;
-            margin-bottom: 15px;
-        }
-
         .line-item {
             display: flex;
             justify-content: space-between;
             padding: 8px 0;
             border-bottom: 1px solid #e9ecef;
+            transition: background-color 1s ease-out;
+            opacity: 1;
+            transform: translateX(0);
         }
 
-        .line-item:last-child {
+        .line-item:last-child:not(.total-line) {
+            border-bottom: 1px solid #e9ecef;
+            font-weight: normal;
+        }
+
+        .line-item.total-line {
+            border-top: 2px solid #28a745;
             border-bottom: none;
             font-weight: bold;
+            margin-top: 10px;
+            padding-top: 12px;
+            color: #28a745;
+        }
+
+        .line-item.highlight-new {
+            background-color: #fff3cd;
+            animation: slideInHighlight 0.3s ease-out;
+        }
+
+        @keyframes slideInHighlight {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+                background-color: #ffeaa7;
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+                background-color: #fff3cd;
+            }
+        }
+
+        .pricing-content.loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .pricing-content.loading::after {
+            content: "Calculating...";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-weight: bold;
+            z-index: 10;
         }
 
         .progress-indicator {
@@ -293,7 +340,7 @@
                 <h3>Project Estimate</h3>
             </div>
             
-            <div class="pricing-content">
+            <div class="pricing-content" id="pricingContent">
                 <div class="progress-indicator">
                     <h4>Progress</h4>
                     <div class="progress-bar">
@@ -303,12 +350,17 @@
                 </div>
                 
                 <div class="pricing-summary">
-                    <h4 style="margin-bottom: 15px; color: #495057;">Estimated Line Items</h4>
-                    <div class="pricing-total" id="totalPrice">$0</div>
-                    <div id="lineItems">
-                        <div class="line-item">
-                            <span>Base consultation</span>
-                            <span>$0</span>
+                    <h5 style="margin-bottom: 15px; color: #495057;">Estimated Fees, Labor & Materials</h5>
+                    <div class="line-items-container">
+                        <div id="lineItems">
+                            <div class="line-item">
+                                <span>Base consultation</span>
+                                <span>$0</span>
+                            </div>
+                        </div>
+                        <div class="line-item total-line" id="totalLine">
+                            <span>Estimated Total</span>
+                            <span>$0 - $0</span>
                         </div>
                     </div>
                 </div>
@@ -344,11 +396,12 @@
         const chatMessages = document.getElementById('chatMessages');
         const chatInput = document.getElementById('chatInput');
         const quickOptions = document.getElementById('quickOptions');
-        const totalPrice = document.getElementById('totalPrice');
         const lineItems = document.getElementById('lineItems');
+        const totalLine = document.getElementById('totalLine');
         const progressFill = document.getElementById('progressFill');
         const progressText = document.getElementById('progressText');
         const imageGallery = document.getElementById('imageGallery');
+        const pricingContent = document.getElementById('pricingContent');
 
         // API functions
         async function apiCall(endpoint, options = {}) {
@@ -389,7 +442,7 @@
                 addMessage(response.message, 'system');
                 
                 updateQuickOptions();
-                updatePricing(response.pricing);
+                updatePricing(response.pricing, false);
                 updateProgress(response.progress);
             } catch (error) {
                 showError('Failed to initialize session. Please refresh the page.');
@@ -409,7 +462,7 @@
             messageDiv.className = `message ${type}-message`;
 
             if (extraSpacing) {
-                messageDiv.style.marginTop = '-5px'; //decrease top margin
+                messageDiv.style.marginTop = '-5px';
             }
 
             messageDiv.textContent = text;
@@ -431,8 +484,8 @@
 
         async function processUserInput(input) {
             try {
-                // Show loading state
                 quickOptions.classList.add('loading');
+                pricingContent.classList.add('loading');
                 
                 const response = await apiCall('/api/chat', {
                     method: 'POST',
@@ -443,49 +496,48 @@
                     }
                 });
                 
-                // Update state
                 currentState.step = response.step;
                 currentState.data = response.data;
                 currentState.nextStep = response.nextStep;
                 
-                // Update UI
-                updatePricing(response.pricing);
                 updateProgress(response.progress);
                 
-                // Handle next step
-                if (response.packages) {
-                    // Show package selection
-                    showImageGallery('Choose your ' + response.data.room + ' package', response.packages);
-                } else if (response.messages && response.messages.length > 1) {
-                    // Multiple messages - show them with delays
-                    response.messages.forEach((message, index) => {
-                        setTimeout(() => {
-                            const hasExtraSpacing = index === 1; // second message gets diff spacing
-                            addMessage(message, 'system', hasExtraSpacing);
-                            // Show options after last message
-                            if (index === response.messages.length - 1) {
+                // NEW FLOW: Wait 0.5s → Update pricing → Wait 2s → Show conversation
+                setTimeout(() => {
+                    updatePricing(response.pricing, true);
+                    
+                    setTimeout(() => {
+                        if (response.packages) {
+                            showImageGallery('Choose your ' + response.data.room + ' package', response.packages);
+                        } else if (response.messages && response.messages.length > 1) {
+                            response.messages.forEach((message, index) => {
+                                setTimeout(() => {
+                                    const hasExtraSpacing = index === 1;
+                                    addMessage(message, 'system', hasExtraSpacing);
+                                    if (index === response.messages.length - 1) {
+                                        updateQuickOptions();
+                                    }
+                                }, (index + 1) * 1000);
+                            });
+                        } else if (response.message && response.nextStep) {
+                            setTimeout(() => {
+                                addMessage(response.message, 'system');
                                 updateQuickOptions();
-                            }
-                        }, (index + 1) * 1000); // 1 second between messages
-                    });
-                } else if (response.message && response.nextStep) {
-                    // Continue conversation
-                    setTimeout(() => {
-                        addMessage(response.message, 'system');
-                        updateQuickOptions();
-                    }, 500);
-                } else {
-                    // Complete
-                    setTimeout(() => {
-                        addMessage('Perfect! Your project estimate is ready.', 'system');
-                        completeProject();
-                    }, 500);
-                }
+                            }, 500);
+                        } else {
+                            setTimeout(() => {
+                                addMessage('Perfect! Your project estimate is ready.', 'system');
+                                completeProject();
+                            }, 500);
+                        }
+                    }, 2000);
+                }, 500);
                 
             } catch (error) {
                 console.error('Error processing input:', error);
             } finally {
                 quickOptions.classList.remove('loading');
+                pricingContent.classList.remove('loading');
             }
         }
 
@@ -522,6 +574,8 @@
                 addMessage(`Selected: ${selectedGalleryItem.name}`, 'user');
                 
                 try {
+                    pricingContent.classList.add('loading');
+                    
                     const response = await apiCall('/api/chat', {
                         method: 'POST',
                         body: {
@@ -533,14 +587,21 @@
                     });
                     
                     currentState.data = response.data;
-                    updatePricing(response.pricing);
                     updateProgress(response.progress);
                     
-                    addMessage('Perfect! Your project estimate is ready.', 'system');
-                    completeProject();
+                    setTimeout(() => {
+                        updatePricing(response.pricing, true);
+                        
+                        setTimeout(() => {
+                            addMessage('Perfect! Your project estimate is ready.', 'system');
+                            completeProject();
+                        }, 2000);
+                    }, 500);
                     
                 } catch (error) {
                     console.error('Error confirming selection:', error);
+                } finally {
+                    pricingContent.classList.remove('loading');
                 }
             }
         }
@@ -561,7 +622,7 @@
         async function restartProject() {
             try {
                 await initializeSession();
-                chatInput.classList.remove('show'); // Hide input on restart
+                chatInput.classList.remove('show');
             } catch (error) {
                 showError('Error restarting project. Please refresh the page.');
             }
@@ -598,51 +659,111 @@
                     button.onclick = () => selectOption(option);
                     quickOptions.appendChild(button);
                 });
-                chatInput.classList.remove('show'); // Hide input
+                chatInput.classList.remove('show');
             } else if (nextStep && nextStep.inputType === 'number') {
                 quickOptions.innerHTML = '';
-                chatInput.classList.add('show'); // Show input
+                chatInput.classList.add('show');
                 chatInput.placeholder = 'Enter square footage...';
-                chatInput.focus(); // Focus for better UX
+                chatInput.focus();
             } else {
                 quickOptions.innerHTML = '';
-                chatInput.classList.remove('show'); // Hide input
+                chatInput.classList.remove('show');
             }
         }
 
-        function updatePricing(pricing) {
+        // ===== PRICING UPDATE FUNCTIONS =====
+
+        function updatePricing(pricing, animate = true) {
             if (!pricing) return;
             
-            // Calculate price range (±10%)
             const total = pricing.total;
             const lowerBound = Math.round(total * 0.9);
             const upperBound = Math.round(total * 1.1);
             
-            if (total > 0) {
-                totalPrice.textContent = `$${lowerBound.toLocaleString()} - $${upperBound.toLocaleString()}`;
-            } else {
-                totalPrice.textContent = '$0';
+            if (!animate) {
+                updatePricingImmediate(pricing, lowerBound, upperBound);
+                return;
             }
             
+            updatePricingSequential(pricing, lowerBound, upperBound);
+        }
+
+        function updatePricingImmediate(pricing, lowerBound, upperBound) {
             lineItems.innerHTML = '';
             pricing.items.forEach(item => {
-                const itemDiv = document.createElement('div');
-                itemDiv.className = 'line-item';
-                itemDiv.innerHTML = `
-                    <span>${item.name}</span>
-                    <span>${item.note || `$${item.price.toLocaleString()}`}</span>
-                `;
-                if (item.breakdown) {
-                    itemDiv.title = item.breakdown;
-                }
-                lineItems.appendChild(itemDiv);
+                addLineItem(item, false);
             });
             
-            if (total > 0) {
-                const totalDiv = document.createElement('div');
-                totalDiv.className = 'line-item';
-                totalDiv.innerHTML = `<span>Estimated Total</span><span>${lowerBound.toLocaleString()} - ${upperBound.toLocaleString()}</span>`;
-                lineItems.appendChild(totalDiv);
+            updateTotalLineContent(lowerBound, upperBound);
+        }
+
+        function updatePricingSequential(pricing, lowerBound, upperBound) {
+            const currentItems = Array.from(lineItems.children)
+                .map(el => el.querySelector('span').textContent);
+            
+            const newItems = pricing.items.filter(item => 
+                !currentItems.includes(item.name)
+            );
+            
+            addItemsSequentially(newItems, 0, () => {
+                setTimeout(() => {
+                    updateTotalLineContent(lowerBound, upperBound, true);
+                }, 500);
+            });
+        }
+
+        function addItemsSequentially(items, index, callback) {
+            if (index >= items.length) {
+                callback();
+                return;
+            }
+            
+            const item = items[index];
+            addLineItem(item, true);
+            
+            setTimeout(() => {
+                addItemsSequentially(items, index + 1, callback);
+            }, 500);
+        }
+
+        function addLineItem(item, withHighlight) {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'line-item';
+            
+            if (withHighlight) {
+                itemDiv.classList.add('highlight-new');
+            }
+            
+            itemDiv.innerHTML = `
+                <span>${item.name}</span>
+                <span>${item.note || `$${item.price.toLocaleString()}`}</span>
+            `;
+            
+            if (item.breakdown) {
+                itemDiv.title = item.breakdown;
+            }
+            
+            lineItems.appendChild(itemDiv);
+            
+            if (withHighlight) {
+                setTimeout(() => {
+                    itemDiv.classList.remove('highlight-new');
+                }, 1000);
+            }
+        }
+
+        function updateTotalLineContent(lowerBound, upperBound, withHighlight = false) {
+            const totalText = lowerBound > 0 ? 
+                `$${lowerBound.toLocaleString()} - $${upperBound.toLocaleString()}` : 
+                '$0 - $0';
+            
+            totalLine.querySelector('span:last-child').textContent = totalText;
+            
+            if (withHighlight) {
+                totalLine.classList.add('highlight-new');
+                setTimeout(() => {
+                    totalLine.classList.remove('highlight-new');
+                }, 1000);
             }
         }
 
@@ -663,4 +784,5 @@
         // Start the app
         init();
     </script>
-
+</body>
+</html>
