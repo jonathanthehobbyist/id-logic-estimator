@@ -606,12 +606,26 @@
         }
 
         function selectGalleryOption(index, option) {
+
+            console.log('=== GALLERY SELECTION DEBUG ===');
+            console.log('Function called with index:', index);
+            console.log('Function called with option:', option);
+            console.log('selectedGalleryItem before:', selectedGalleryItem);
+
             document.querySelectorAll('.gallery-option').forEach(el => el.classList.remove('selected'));
             document.querySelectorAll('.gallery-option')[index].classList.add('selected');
             selectedGalleryItem = option;
+
+            console.log('selectedGalleryItem after:', selectedGalleryItem);
+            console.log('=== END GALLERY DEBUG ===');
         }
 
         async function confirmGallerySelection() {
+
+            console.log('=== CONFIRM SELECTION DEBUG ===');
+            console.log('selectedGalleryItem:', selectedGalleryItem);
+            console.log('Is null?', selectedGalleryItem === null);
+
             if (selectedGalleryItem) {
                 closeGallery();
                 addMessage(`Selected: ${selectedGalleryItem.name}`, 'user');
@@ -646,6 +660,10 @@
                 } finally {
                     pricingContent.classList.remove('loading');
                 }
+            } else {
+                console.log('ERROR: No item selected!');
+                alert('Please select an option first');
+                return;
             }
         }
 
