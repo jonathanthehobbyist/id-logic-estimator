@@ -597,7 +597,12 @@
                     <p>+$${option.price.toLocaleString()}</p>
                     <small style="color: #6c757d;">${option.description}</small>
                 `;
-                optionDiv.onclick = () => selectGalleryOption(index, option);
+                optionDiv.onclick = () => {
+                    console.log('CLICK DETECTED on option:', index, option.name);
+                    selectGalleryOption(index, option);
+                };
+                
+                console.log('Added click handler for:', option.name);
                 galleryOptions.appendChild(optionDiv);
             });
             
