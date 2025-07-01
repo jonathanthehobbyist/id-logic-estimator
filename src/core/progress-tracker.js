@@ -6,8 +6,8 @@ export class ProgressTracker {
   static getProgress(step) {
     const progressMap = {
       'initial': 0,
-      'room_selected': 20,
-      'square_footage': 40,
+      'square_footage': 20,
+      'project_type': 40,
       
       // Room-specific steps
       'kitchen_flooring': 60,

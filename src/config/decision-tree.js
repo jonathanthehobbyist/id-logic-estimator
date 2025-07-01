@@ -3,20 +3,20 @@
 
 export const DECISION_TREE = {
   initial: {
-    question: "Hi, this app will walk you through getting an estimate for an inderior design project. Which room would you like to work on?",
+    question: "Hi, this app will walk you through getting an estimate for an interior design project. Which room would you like to work on?",
     options: ["Kitchen", "Living Room", "Bedroom", "Bathroom"],
-    next: "room_selected"
-  },
-  room_selected: {
-    question: "What's the approximate square footage?",
-    inputType: "number",
-    validation: { min: 50, max: 2000 },
     next: "square_footage"
   },
   square_footage: {
-    question: "What's your budget range?",
-    options: ["$5,000 - $15,000", "$15,000 - $35,000", "$35,000 - $75,000", "$75,000+"],
-    next: "project_type"
+    question: "What's the approximate square footage?",
+    inputType: "number",
+    validation: { min: 50, max: 2000 },
+    next: "project_type"  // Changed from "budget_selected"
+  },
+  project_type: {
+    question: "What type of project is this?",
+    options: ["Update (cosmetic changes)", "Partial Renovation", "Full Renovation"],
+    // no next, getNextStep() in step-engine.js handles the room-specific flow next step from project_type
   },
   
   // Kitchen-specific flow

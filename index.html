@@ -898,7 +898,9 @@ async function confirmGallerySelection() {
             });
         }
 
-        setupSquareFootageValidation('chatInput');
+        if (currentStep === 'square_footage') {
+            setupSquareFootageValidation('chatInput');
+        }
 
         // Initialize
         function init() {
