@@ -630,51 +630,45 @@
             console.log('selectedGalleryItem:', selectedGalleryItem);
             console.log('Is null?', selectedGalleryItem === null);
             
-            if (selectedGalleryItem) {
-                console.log('Step 1: About to save selectedItem');
-                const selectedItem = selectedGalleryItem;
-                console.log('Step 2: selectedItem saved:', selectedItem);
-                
-                console.log('Step 3: About to close gallery');
-                closeGallery();
-                console.log('Step 4: Gallery closed');
-                
-                console.log('Step 5: About to access selectedItem.name');
-                console.log('selectedItem:', selectedItem);
-                console.log('selectedItem.name:', selectedItem.name);
-                
-                console.log('Step 6: About to call addMessage');
-                addMessage(`Selected: ${selectedItem.name}`, 'user');
-                console.log('Step 7: addMessage completed');
-                
-                try {
-                    console.log('Step 8: About to set loading');
-                    pricingContent.classList.add('loading');
-                    
-                    console.log('Step 9: About to make API call');
-                    console.log('sessionId:', currentState.sessionId);
-                    console.log('currentState:', currentState);
-                    
-                    const response = await apiCall('/api/chat', {
-                        method: 'POST',
-                        body: {
-                            sessionId: currentState.sessionId,
-                            input: selectedItem.name,
-                            step: currentState.step,
-                            package: selectedItem
-                        }
-                    });
-                    
-                    console.log('Step 10: API call completed');
-                    // ... rest unchanged
-                    
-                } catch (error) {
-                    console.error('Error confirming selection:', error);
-                } finally {
-                    pricingContent.classList.remove('loading');
-                }
-            } else {
+            if (!selectedGalleryItem) {
                 console.log('ERROR: No item selected!');
+                return;
+            }
+            
+            const selectedItem = selectedGalleryItem;
+            closeGallery();
+            
+            addMessage(`Selected: ${selectedItem.name}`, 'user');
+            
+            try {
+                pricingContent.classList.add('loading');
+                
+                const response = await apiCall('/api/chat', {
+                    method: 'POST',
+                    body: {
+                        sessionId: currentState.sessionId,
+                        input: selectedItem.name,
+                        step: currentState.step,
+                        package: selectedItem
+                    }
+                });
+                
+                currentState.data = response.data;
+                updateProgress(response.progress);
+                
+                setTimeout(() => {
+                    updatePricing(response.pricing, true);
+                    
+                    setTimeout(() => {
+                        addMessage('Perfect! Your project estimate is ready.', 'system');
+                        completeProject();
+                    }, 2000);
+                }, 500);
+                
+            } catch (error) {
+                console.error('Error confirming selection:', error);
+            } finally {
+                pricingContent.classList.remove('loading');
             }
         }
 
