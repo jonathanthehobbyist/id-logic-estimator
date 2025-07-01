@@ -625,52 +625,72 @@
             console.log('=== END GALLERY DEBUG ===');
         }
 
-        async function confirmGallerySelection() {
-            console.log('=== CONFIRM SELECTION DEBUG ===');
-            console.log('selectedGalleryItem:', selectedGalleryItem);
-            console.log('Is null?', selectedGalleryItem === null);
-            
-            if (!selectedGalleryItem) {
-                console.log('ERROR: No item selected!');
-                return;
+async function confirmGallerySelection() {
+    console.log('=== CONFIRM SELECTION DEBUG ===');
+    console.log('selectedGalleryItem:', selectedGalleryItem);
+    console.log('Is null?', selectedGalleryItem === null);
+    
+    if (!selectedGalleryItem) {
+        console.log('ERROR: No item selected!');
+        return;
+    }
+    
+    const selectedItem = selectedGalleryItem;
+    closeGallery();
+    
+    addMessage(`Selected: ${selectedItem.name}`, 'user');
+    
+    try {
+        pricingContent.classList.add('loading');
+        
+        const response = await apiCall('/api/chat', {
+            method: 'POST',
+            body: {
+                sessionId: currentState.sessionId,
+                input: selectedItem.name,
+                step: currentState.step,
+                package: selectedItem
             }
+        });
+        
+        // ADD THIS DEBUGGING:
+        console.log('=== API RESPONSE DEBUG ===');
+        console.log('Full response:', response);
+        console.log('New step:', response.step);
+        console.log('Next step config:', response.nextStep);
+        console.log('Has message?', !!response.message);
+        console.log('Has packages?', !!response.packages);
+        console.log('=== END API RESPONSE DEBUG ===');
+        
+        currentState.step = response.step;
+        currentState.data = response.data;
+        currentState.nextStep = response.nextStep;
+        
+        updateProgress(response.progress);
+        
+        setTimeout(() => {
+            updatePricing(response.pricing, true);
             
-            const selectedItem = selectedGalleryItem;
-            closeGallery();
-            
-            addMessage(`Selected: ${selectedItem.name}`, 'user');
-            
-            try {
-                pricingContent.classList.add('loading');
-                
-                const response = await apiCall('/api/chat', {
-                    method: 'POST',
-                    body: {
-                        sessionId: currentState.sessionId,
-                        input: selectedItem.name,
-                        step: currentState.step,
-                        package: selectedItem
-                    }
-                });
-                
-                currentState.data = response.data;
-                updateProgress(response.progress);
-                
-                setTimeout(() => {
-                    updatePricing(response.pricing, true);
-                    
-                    setTimeout(() => {
-                        addMessage('Perfect! Your project estimate is ready.', 'system');
-                        completeProject();
-                    }, 2000);
-                }, 500);
-                
-            } catch (error) {
-                console.error('Error confirming selection:', error);
-            } finally {
-                pricingContent.classList.remove('loading');
-            }
-        }
+            setTimeout(() => {
+                // The conversation should continue here
+                if (response.packages) {
+                    showImageGallery('Choose your ' + response.data.room + ' flooring', response.packages);
+                } else if (response.message && response.nextStep) {
+                    addMessage(response.message, 'system');
+                    updateQuickOptions();
+                } else {
+                    addMessage('Perfect! Your project estimate is ready.', 'system');
+                    completeProject();
+                }
+            }, 2000);
+        }, 500);
+        
+    } catch (error) {
+        console.error('Error confirming selection:', error);
+    } finally {
+        pricingContent.classList.remove('loading');
+    }
+}
 
         function closeGallery() {
             imageGallery.style.display = 'none';
