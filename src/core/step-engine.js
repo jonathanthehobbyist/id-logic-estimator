@@ -38,11 +38,8 @@ export class StepEngine {
       case 'initial':
         session.data.room = input;
         break;
-      //case 'room_selected':
-        //session.data.sqft = input;
-        //break;
       case 'square_footage':
-        session.data.projectType = input;
+        session.data.squareFootage = input;
         break;
       default:
         // Room-specific steps
