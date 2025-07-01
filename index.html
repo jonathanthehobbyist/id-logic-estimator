@@ -601,7 +601,7 @@
                     console.log('CLICK DETECTED on option:', index, option.name);
                     selectGalleryOption(index, option);
                 };
-                
+
                 console.log('Added click handler for:', option.name);
                 galleryOptions.appendChild(optionDiv);
             });
@@ -631,9 +631,13 @@
             console.log('Is null?', selectedGalleryItem === null);
             
             if (selectedGalleryItem) {
+
+                const selectedItem = selectedGalleryItem;
+
                 closeGallery();
                 
                 console.log('About to add message with name:', selectedGalleryItem.name);
+                
                 addMessage(`Selected: ${selectedGalleryItem.name}`, 'user');
                 
                 try {
@@ -648,9 +652,9 @@
                         method: 'POST',
                         body: {
                             sessionId: currentState.sessionId,
-                            input: selectedGalleryItem.name,
+                            input: selectedItem.name,
                             step: currentState.step,
-                            package: selectedGalleryItem
+                            package: selectedItem
                         }
                     });
                     
