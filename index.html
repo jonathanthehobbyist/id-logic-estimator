@@ -578,8 +578,21 @@
 
                 const optionDiv = document.createElement('div');
                 optionDiv.className = 'gallery-option';
+
+                // Check if its a URL or emoji
+                const isUrl = option.image.startsWith('http');
+
+                let imageHtml;
+                if (isUrl) {
+                    imageHtml = '<img src="' + option.image + '" style="width: 100px; height: 100px; object-fit: cover; border-radius: 4px;" onerror="this.style.display=\'none\';">';
+                } else {
+                    imageHtml = '<div style="font-size: 48px;">' + option.image + '</div>';
+                }
+
                 optionDiv.innerHTML = `
-                    <div style="font-size: 48px; margin-bottom: 10px;">${option.image}</div>
+                    <div style="margin-bottom: 10px;">
+                        ${imageHtml}
+                    </div>
                     <h4>${option.name}</h4>
                     <p>+$${option.price.toLocaleString()}</p>
                     <small style="color: #6c757d;">${option.description}</small>
