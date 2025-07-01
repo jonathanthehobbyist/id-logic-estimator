@@ -497,6 +497,10 @@
                 console.log('Setting loading states...');
                 quickOptions.classList.add('loading');
                 pricingContent.classList.add('loading');
+
+                console.log('About to make API call with sessionId:', sessionId);
+                console.log('Session ID type:', typeof sessionId);
+                console.log('Session ID length:', sessionId ? sessionId.length : 'null/undefined');
                 
                 console.log('About to make API call...');
                 const response = await apiCall('/api/chat', {
@@ -507,6 +511,12 @@
                         step: currentState.step
                     }
                 });
+
+                // After: const response = await apiCall(...);
+                console.log('Response sessionId:', response.sessionId);
+                console.log('Current sessionId before update:', sessionId);
+                sessionId = response.sessionId; // Make sure this line exists
+                console.log('Current sessionId after update:', sessionId);
 
                  console.log('API call completed! Response:', response);
 

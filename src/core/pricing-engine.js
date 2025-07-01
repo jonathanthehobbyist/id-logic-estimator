@@ -9,7 +9,7 @@ export class PricingEngine {
   static calculate(session) {
     const { data } = session;
     const room = data.room;
-    const sqft = data.sqft || 0;
+    const sqft = data.squareFootage || 0;
     
     if (!room || !PRICING_COMPONENTS[room]) {
       return this.emptyResult();
@@ -47,7 +47,7 @@ export class PricingEngine {
       price: fee, 
       category: 'design' 
     });
-    traceLog.push(`Design fee: $${fee}`);
+    traceLog.push('Design fee: $0');
     
     return fee;
   }
@@ -94,6 +94,7 @@ export class PricingEngine {
       price: laborCost,
       category: 'labor'
     });
+    console.log(`flooring installation ${flooringChoice} sq ft ${sqft} labor cost ${laborCost}`);
     traceLog.push(`Flooring Installation (${flooringChoice}): $${components.labor.flooring_install[flooringChoice].perSqFt} × ${sqft} = $${laborCost}`);
     
     // Material cost
@@ -117,8 +118,8 @@ export class PricingEngine {
     traceLog.push(`DEBUG: Processing labor type: ${laborType}`);
 
     // Special case for demolition - use project type instead of room-specific choice
-    if (laborType === 'demolition' && typeof laborConfig === 'object' && data.projectType) {
-      const userChoice = data.projectType;
+    if (laborType === 'demolition' && typeof laborConfig === 'object' && data.project_type) {
+      const userChoice = data.project_type;
       if (laborConfig[userChoice] && laborConfig[userChoice].perSqFt !== undefined) {
         const cost = laborConfig[userChoice].perSqFt * sqft;
         traceLog.push(`Demolition (${userChoice}): $${laborConfig[userChoice].perSqFt} × ${sqft} = $${cost}`);
