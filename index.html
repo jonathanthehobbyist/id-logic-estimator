@@ -861,6 +861,45 @@ async function confirmGallerySelection() {
             progressText.textContent = progress.text;
         }
 
+        function setupSquareFootageValidation(inputId) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+
+            // Create error message
+            const errorDiv = document.createElement('div');
+            errorDiv.style.cssText = 'color: red; font-size: 14px; margin-top: 5px; display: none;';
+            errorDiv.textContent = 'Digits only please';
+            input.parentNode.insertBefore(errorDiv, input.nextSibling);
+
+            // Add shake animation CSS
+            if (!document.getElementById('shake-style')) {
+                const style = document.createElement('style');
+                style.id = 'shake-style';
+                style.textContent = '@keyframes shake { 0%, 50%, 100% { transform: translateX(0); } 25%, 75% { transform: translateX(-5px); } } .shake { animation: shake 0.5s; }';
+                document.head.appendChild(style);
+            }
+
+            input.addEventListener('input', function(e) {
+                const value = e.target.value;
+                
+                // Check if contains non-digits
+                if (/[^0-9]/.test(value)) {
+                    // Remove non-digits
+                    e.target.value = value.replace(/[^0-9]/g, '');
+                    
+                    // Show error and shake
+                    errorDiv.style.display = 'block';
+                    input.classList.add('shake');
+                    setTimeout(() => {
+                        input.classList.remove('shake');
+                        errorDiv.style.display = 'none';
+                    }, 2000);
+                }
+            });
+        }
+
+        setupSquareFootageValidation('chatInput');
+
         // Initialize
         function init() {
             chatInput.addEventListener('keypress', handleKeyPress);
