@@ -44,9 +44,6 @@ export class StepEngine {
       case 'square_footage':
         session.data.budget = input;
         break;
-      case 'budget_selected':
-        session.data.projectType = input;
-        break;
       default:
         // Room-specific steps
         session.data[session.step] = input;
@@ -61,10 +58,10 @@ export class StepEngine {
       case 'room_selected':
         return 'square_footage';
       case 'square_footage':
-        return 'budget_selected';
-      case 'budget_selected':
+        return 'project_type';
+      // case 'budget_selected':
         // Skip to room-specific questions
-        return this.getRoomSpecificFirstStep(session.data.room);
+        // return this.getRoomSpecificFirstStep(session.data.room);
       default:
         // Use decision tree for room-specific steps
         const currentStepConfig = DECISION_TREE[session.step];

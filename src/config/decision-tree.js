@@ -16,11 +16,6 @@ export const DECISION_TREE = {
   square_footage: {
     question: "What's your budget range?",
     options: ["$5,000 - $15,000", "$15,000 - $35,000", "$35,000 - $75,000", "$75,000+"],
-    next: "budget_selected"
-  },
-  budget_selected: {
-    question: "What type of project is this?",
-    options: ["Update (cosmetic changes)", "Partial Renovation", "Full Renovation"],
     next: "project_type"
   },
   
@@ -36,10 +31,11 @@ export const DECISION_TREE = {
     next: "kitchen_countertops"
   },
   kitchen_countertops: {
-    question: "What countertop material do you prefer?",
-    options: ["Laminate", "Quartz", "Granite", "Marble", "Butcher Block"],
+    question: "Choose your countertop material:",
+    inputType: 'image',  // Changed from 'choice' 
+    category: 'countertops',  // New category
     next: "kitchen_appliances"
-  },
+},
   kitchen_appliances: {
     question: "Choose your appliance package:",
     options: ["Keep existing appliances", "Economy package", "Mid-range package", "High-end package", "Luxury package"],
