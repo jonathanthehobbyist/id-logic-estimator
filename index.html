@@ -478,15 +478,26 @@
         }
 
         function selectOption(option) {
+
+            console.log('=== SELECT OPTION CALLED ===');
+            console.log('Option selected:', option);
+            console.log('Current step:', currentState.step);
+
             addMessage(option, 'user');
             processUserInput(option);
         }
 
         async function processUserInput(input) {
+
+            console.log('=== PROCESS USER INPUT START ===');
+            console.log('Input received:', input);
+
             try {
+                console.log('Setting loading states...');
                 quickOptions.classList.add('loading');
                 pricingContent.classList.add('loading');
                 
+                console.log('About to make API call...');
                 const response = await apiCall('/api/chat', {
                     method: 'POST',
                     body: {
@@ -495,6 +506,16 @@
                         step: currentState.step
                     }
                 });
+
+                 console.log('API call completed! Response:', response);
+
+                // ADD THIS DEBUG LOGGING:
+                console.log('=== BACKEND RESPONSE DEBUG ===');
+                console.log('Full response:', response);
+                console.log('Has packages?', !!response.packages);
+                console.log('Current step:', response.step);
+                console.log('Next step config:', response.nextStep);
+                console.log('=== END DEBUG ===');
                 
                 currentState.step = response.step;
                 currentState.data = response.data;
@@ -542,11 +563,19 @@
         }
 
         function showImageGallery(title, options) {
+
+            console.log('=== GALLERY DEBUG ===');
+            console.log('Title:', title);
+            console.log('Options received:', options);
+            console.log('Number of options:', options.length);
+
             document.getElementById('galleryTitle').textContent = title;
             const galleryOptions = document.getElementById('galleryOptions');
             galleryOptions.innerHTML = '';
             
             options.forEach((option, index) => {
+                console.log(`Processing option ${index}:`, option);
+
                 const optionDiv = document.createElement('div');
                 optionDiv.className = 'gallery-option';
                 optionDiv.innerHTML = `
@@ -559,6 +588,7 @@
                 galleryOptions.appendChild(optionDiv);
             });
             
+            console.log('Gallery should now be visible');
             imageGallery.style.display = 'flex';
         }
 
