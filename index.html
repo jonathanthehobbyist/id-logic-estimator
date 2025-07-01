@@ -626,17 +626,23 @@
         }
 
         async function confirmGallerySelection() {
-
             console.log('=== CONFIRM SELECTION DEBUG ===');
             console.log('selectedGalleryItem:', selectedGalleryItem);
             console.log('Is null?', selectedGalleryItem === null);
-
+            
             if (selectedGalleryItem) {
                 closeGallery();
+                
+                console.log('About to add message with name:', selectedGalleryItem.name);
                 addMessage(`Selected: ${selectedGalleryItem.name}`, 'user');
                 
                 try {
                     pricingContent.classList.add('loading');
+                    
+                    console.log('About to make API call...');
+                    console.log('sessionId:', currentState.sessionId);
+                    console.log('input:', selectedGalleryItem.name);
+                    console.log('step:', currentState.step);
                     
                     const response = await apiCall('/api/chat', {
                         method: 'POST',
@@ -648,27 +654,16 @@
                         }
                     });
                     
-                    currentState.data = response.data;
-                    updateProgress(response.progress);
-                    
-                    setTimeout(() => {
-                        updatePricing(response.pricing, true);
-                        
-                        setTimeout(() => {
-                            addMessage('Perfect! Your project estimate is ready.', 'system');
-                            completeProject();
-                        }, 2000);
-                    }, 500);
+                    console.log('API call completed successfully');
+                    // ... rest of the function
                     
                 } catch (error) {
-                    console.error('Error confirming selection:', error);
+                    console.error('Error in API call:', error);
                 } finally {
                     pricingContent.classList.remove('loading');
                 }
             } else {
                 console.log('ERROR: No item selected!');
-                alert('Please select an option first');
-                return;
             }
         }
 
