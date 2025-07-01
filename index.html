@@ -515,7 +515,7 @@
                 // After: const response = await apiCall(...);
                 console.log('Response sessionId:', response.sessionId);
                 console.log('Current sessionId before update:', currentState.sessionId);
-                sessionId = response.sessionId; // Make sure this line exists
+                currentState.sessionId = response.sessionId; // Make sure this line exists
                 console.log('Current sessionId after update:', currentState.sessionId);
 
                  console.log('API call completed! Response:', response);
