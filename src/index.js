@@ -11,6 +11,7 @@ export default {
     const url = new URL(request.url);
     const corsHeaders = {
       'Access-Control-Allow-Origin': '*',
+      // s'Access-Control-Allow-Origin': 'https://eabf9ae1.id-logic-estimator.pages.dev',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     };

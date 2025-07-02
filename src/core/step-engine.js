@@ -1,7 +1,7 @@
 // core/step-engine.js
 // Handles conversation flow and step transitions
 
-import { DECISION_TREE } from '../config/decision-tree.js';
+import { CONVERSATION_FLOW, ROOM_FLOWS, ConversationFlowHelper } from '../config/conversation-flow.js'
 import { Validator } from './validator.js';
 import { SessionManager } from './session-manager.js';
 
@@ -41,6 +41,8 @@ export class StepEngine {
       case 'square_footage':
         session.data.squareFootage = input;
         break;
+      case 'project_type':
+        session.data.project_type = input;
       default:
         // Room-specific steps
         session.data[session.step] = input;
@@ -81,7 +83,7 @@ export class StepEngine {
   }
   
   static getCurrentStepConfig(step) {
-    return DECISION_TREE[step];
+    return ConversationFlowHelper.getNextStep(session.step, session.lastInput, session.data)
   }
   
   static isComplete(step) {
