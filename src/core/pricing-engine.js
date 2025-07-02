@@ -111,6 +111,44 @@ export class PricingEngine {
     
     return laborCost;
   }
+
+    // Add this new method after calculateFlooringLabor:
+  static calculateCountertopWithInstall(components, data, room, sqft, items, traceLog) {
+    const countertopChoice = data[`${room.toLowerCase().replace(' ', '_')}_countertops`];
+    
+    if (!countertopChoice) return 0;
+    
+    let total = 0;
+    
+    // Material cost
+    if (components.countertops?.[countertopChoice]) {
+      const materialCost = this.calculateMaterialComponent('countertops', components.countertops, countertopChoice, sqft, traceLog);
+      if (materialCost > 0) {
+        items.push({
+          name: `Countertops: ${countertopChoice}`,
+          price: materialCost,
+          category: 'materials'
+        });
+        total += materialCost;
+      }
+    }
+    
+    // Auto-add installation
+    if (components.labor?.countertop_install) {
+      const installCost = components.labor.countertop_install.perSqFt * sqft;
+      items.push({
+        name: `Countertop Installation (${sqft} sq ft)`,
+        price: installCost,
+        category: 'labor'
+      });
+      traceLog.push(`Countertop Installation: $${components.labor.countertop_install.perSqFt} × ${sqft} = $${installCost}`);
+      total += installCost;
+    }
+    
+    return total;
+  }
+
+  
   
   static calculateLaborComponent(laborType, laborConfig, data, room, sqft, traceLog) {
 
@@ -157,31 +195,21 @@ export class PricingEngine {
     return 0;
   }
   
-  static calculateMaterials(components, data, room, sqft, items, traceLog) {
-    const roomComponents = ROOM_COMPONENT_MAPPING[room]?.filter(comp => comp !== 'flooring') || [];
-    let materialTotal = 0;
-    
-    roomComponents.forEach(componentType => {
-      const component = components[componentType];
-      if (!component) return;
+    static calculateMaterials(components, data, room, sqft, items, traceLog) {
+      const roomComponents = ROOM_COMPONENT_MAPPING[room]?.filter(comp => comp !== 'flooring' && comp !== 'countertops') || [];
+      let materialTotal = 0;
       
-      const userChoice = data[`${room.toLowerCase().replace(' ', '_')}_${componentType}`];
-      if (!userChoice) return;
+      // Handle countertops with auto-install
+      materialTotal += this.calculateCountertopWithInstall(components, data, room, sqft, items, traceLog);
       
-      const cost = this.calculateMaterialComponent(componentType, component, userChoice, sqft, traceLog);
-      if (cost > 0) {
-        materialTotal += cost;
-        items.push({
-          name: `${this.formatName(componentType)}: ${userChoice}`,
-          price: cost,
-          category: 'materials'
-        });
-      }
-    });
-    
-    return materialTotal;
-  }
-  
+      // Handle other materials normally
+      roomComponents.forEach(componentType => {
+        // ... rest of existing code
+      });
+      
+      return materialTotal;
+    }
+      
   static calculateMaterialComponent(componentType, component, userChoice, sqft, traceLog) {
     if (typeof component[userChoice] === 'number') {
       traceLog.push(`${this.formatName(componentType)}: ${userChoice} = $${component[userChoice]}`);

@@ -46,7 +46,7 @@ export const PRICING_COMPONENTS = {
         description: "Feature installation"
       }
     },
-    design: { base: 1500 },
+    design: { base: 0 },
     flooring: {
       "Ceramic tile": { perSqFt: 12 },
       "Luxury vinyl plank": { perSqFt: 8 },
