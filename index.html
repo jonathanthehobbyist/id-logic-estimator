@@ -483,6 +483,12 @@
             console.log('=== SELECT OPTION CALLED ===');
             console.log('Option selected:', option);
             console.log('Current step:', currentState.step);
+            console.log('Option type:', typeof option);
+
+            if (option === undefined) {
+        console.error('Option is undefined!');
+        return;
+    }
 
             addMessage(option.name, 'user');
             processUserInput(option);
