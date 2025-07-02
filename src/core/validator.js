@@ -1,12 +1,14 @@
 // core/validator.js
 // Handles all input validation logic
 
-import { DECISION_TREE } from '../config/decision-tree.js';
+// KEEPING: import { DECISION_TREE } from '../config/decision-tree.js';
+import { CONVERSATION_FLOW, ROOM_FLOWS, ConversationFlowHelper } from '../config/conversation-flow.js';
 
 export class Validator {
   
   static validate(input, step) {
-    const stepConfig = DECISION_TREE[step];
+    // KEEPING: const stepConfig = DECISION_TREE[step];
+    const stepConfig = ConversationFlowHelper.getCurrentStepConfig(step);
     
     if (!stepConfig) {
       return { 
@@ -63,10 +65,16 @@ export class Validator {
   }
   
   static validateChoice(input, options) {
-    if (!options.includes(input)) {
+    // Handle Gallery options (objects with name property)
+    const validOptions = options.map(opt => opt.name || opt);
+
+    console.log('Input:', input);
+    console.log('Valid options:', validOptions);
+
+    if (!validOptions.includes(input)) {
       return { 
         valid: false, 
-        error: `Please select one of: ${options.join(', ')}` 
+        error: `Please select one of: ${validOptions.join(', ')}` 
       };
     }
     

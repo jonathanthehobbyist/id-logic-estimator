@@ -485,7 +485,7 @@
             console.log('Current step:', currentState.step);
 
             addMessage(option, 'user');
-            processUserInput(option);
+            processUserInput(option.name);
         }
 
         async function processUserInput(input) {
