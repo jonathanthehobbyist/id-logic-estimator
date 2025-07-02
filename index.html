@@ -1,932 +1,844 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interior Design Consultation</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+import React, { useState, useEffect } from 'react';
+import { ChevronRight, DollarSign, Calculator, Home, CheckCircle, AlertCircle, Package, Wrench, Zap, Palette } from 'lucide-react';
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f8f9fa;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        .container {
-            display: flex;
-            height: 100vh;
-        }
-
-        .chat-section {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: white;
-            border-right: 1px solid #e9ecef;
-        }
-
-        .pricing-section {
-            width: 400px;
-            background: #f8f9fa;
-            border-left: 1px solid #e9ecef;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .chat-header {
-            padding: 20px;
-            background: #007bff;
-            color: white;
-            text-align: center;
-        }
-
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .message {
-            max-width: 80%;
-            padding: 12px 16px;
-            border-radius: 18px;
-            word-wrap: break-word;
-        }
-
-        .follow-message { margin-top: -5px; }
-
-        .system-message {
-            background: #e9ecef;
-            color: #495057;
-            align-self: flex-start;
-        }
-
-        .user-message {
-            background: #007bff;
-            color: white;
-            align-self: flex-end;
-        }
-
-        .chat-input-area {
-            padding: 20px;
-            border-top: 1px solid #e9ecef;
-        }
-
-        .chat-input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ced4da;
-            border-radius: 20px;
-            outline: none;
-            font-size: 16px;
-            display: none;
-        }
-
-        .chat-input.show {
-            display: block;
-        }
-
-        .chat-input:focus {
-            border-color: #007bff;
-            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-        }
-
-        .quick-options {
-            display: flex;
-            gap: 8px;
-            margin-top: 10px;
-            flex-wrap: wrap;
-        }
-
-        .quick-option {
-            padding: 8px 12px;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 15px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background-color 0.2s;
-        }
-
-        .quick-option:hover {
-            background: #0056b3;
-        }
-
-        .pricing-header {
-            padding: 20px;
-            background: #28a745;
-            color: white;
-            text-align: center;
-        }
-
-        .pricing-content {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            position: relative;
-        }
-
-        .pricing-summary {
-            background: white;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .line-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid #e9ecef;
-            transition: background-color 1s ease-out;
-            opacity: 1;
-            transform: translateX(0);
-        }
-
-        .line-item:last-child:not(.total-line) {
-            border-bottom: 1px solid #e9ecef;
-            font-weight: normal;
-        }
-
-        .line-item.total-line {
-            border-top: 2px solid #28a745;
-            border-bottom: none;
-            font-weight: bold;
-            margin-top: 10px;
-            padding-top: 12px;
-            color: #28a745;
-        }
-
-        .line-item.highlight-new {
-            background-color: #fff3cd;
-            animation: slideInHighlight 0.3s ease-out;
-        }
-
-        @keyframes slideInHighlight {
-            from {
-                opacity: 0;
-                transform: translateX(-10px);
-                background-color: #ffeaa7;
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-                background-color: #fff3cd;
-            }
-        }
-
-        .pricing-content.loading {
-            opacity: 0.7;
-            pointer-events: none;
-        }
-
-        .pricing-content.loading::after {
-            content: "Calculating...";
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(255, 255, 255, 0.9);
-            padding: 10px 20px;
-            border-radius: 4px;
-            font-weight: bold;
-            z-index: 10;
-        }
-
-        .progress-indicator {
-            background: white;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 8px;
-            background: #e9ecef;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: #007bff;
-            transition: width 0.3s ease;
-        }
-
-        .image-gallery {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.8);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .gallery-content {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            max-width: 800px;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-
-        .gallery-options {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr); /* Changed from auto-fit to exactly 2 columns */
-            gap: 20px; /* Increased gap for better spacing */
-            margin-top: 20px;
-        }
-
-        .gallery-option {
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
-            padding: 20px; /* Increased padding */
-            cursor: pointer;
-            transition: all 0.2s;
-            text-align: center;
-            min-height: 200px; /* Ensure consistent height */
-        }
-
-        .gallery-option:hover {
-            border-color: #007bff;
-            transform: translateY(-2px);
-        }
-
-        .gallery-option.selected {
-            border-color: #007bff;
-            background: #f0f8ff;
-        }
-
-        .close-gallery {
-            float: right;
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: #6c757d;
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                flex-direction: column;
-            }
-            
-            .pricing-section {
-                width: 100%;
-                height: 300px;
-            }
-            
-            .chat-section {
-                height: calc(100vh - 300px);
-            }
-        }
-
-        .loading {
-            opacity: 0.6;
-            pointer-events: none;
-        }
-
-        .error-message {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-            border-radius: 4px;
-            padding: 10px;
-            margin: 10px 0;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="chat-section">
-            <div class="chat-header">
-                <h2>Interior Design Consultation</h2>
-                <p>Let's plan your perfect space</p>
-            </div>
-            
-            <div class="chat-messages" id="chatMessages">
-                <div class="message system-message">
-                    Hello! I'm here to help you plan and price your interior design project. Starting up...
-                </div>
-            </div>
-            
-            <div class="chat-input-area">
-                <input type="text" class="chat-input" id="chatInput" placeholder="Type your message...">
-                <div class="quick-options" id="quickOptions">
-                    <div>Loading...</div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="pricing-section">
-            <div class="pricing-header">
-                <h3>Project Estimate</h3>
-            </div>
-            
-            <div class="pricing-content" id="pricingContent">
-                <div class="progress-indicator">
-                    <h4>Progress</h4>
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
-                    </div>
-                    <p id="progressText">Getting started...</p>
-                </div>
-                
-                <div class="pricing-summary">
-                    <h5 style="margin-bottom: 15px; color: #495057;">Estimated Fees, Labor & Materials</h5>
-                    <div class="line-items-container">
-                        <div id="lineItems">
-                            <div class="line-item">
-                                <span>Base consultation</span>
-                                <span>$0</span>
-                            </div>
-                        </div>
-                        <div class="line-item total-line" id="totalLine">
-                            <span>Estimated Total</span>
-                            <span>$0 - $0</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="image-gallery" id="imageGallery">
-        <div class="gallery-content">
-            <button class="close-gallery" onclick="closeGallery()">&times;</button>
-            <h3 id="galleryTitle">Select Your Option</h3>
-            <div class="gallery-options" id="galleryOptions"></div>
-            <button class="quick-option" onclick="confirmGallerySelection()" style="margin-top: 20px;">Confirm Selection</button>
-        </div>
-    </div>
-
-    <script>
-        // Configuration - Your correct worker URL
-        const WORKER_URL = 'https://falling-frog.jon-0ad.workers.dev';
-        
-        // App state
-        let currentState = {
-            sessionId: null,
-            step: "initial",
-            data: {},
-            progress: 0,
-            nextStep: null
-        };
-
-        let selectedGalleryItem = null;
-
-        // DOM elements
-        const chatMessages = document.getElementById('chatMessages');
-        const chatInput = document.getElementById('chatInput');
-        const quickOptions = document.getElementById('quickOptions');
-        const lineItems = document.getElementById('lineItems');
-        const totalLine = document.getElementById('totalLine');
-        const progressFill = document.getElementById('progressFill');
-        const progressText = document.getElementById('progressText');
-        const imageGallery = document.getElementById('imageGallery');
-        const pricingContent = document.getElementById('pricingContent');
-
-        // API functions
-        async function apiCall(endpoint, options = {}) {
-            try {
-                console.log(`Making API call to: ${WORKER_URL}${endpoint}`);
-                const response = await fetch(`${WORKER_URL}${endpoint}`, {
-                    method: options.method || 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        ...options.headers
-                    },
-                    body: options.body ? JSON.stringify(options.body) : undefined
-                });
-                
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error || 'API call failed');
-                }
-                
-                return await response.json();
-            } catch (error) {
-                console.error('API Error:', error);
-                showError(`Connection error: ${error.message}`);
-                throw error;
-            }
-        }
-
-        async function initializeSession() {
-            try {
-                addMessage('Connecting to pricing system...', 'system');
-                const response = await apiCall('/api/session', { method: 'POST' });
-                currentState.sessionId = response.sessionId;
-                currentState.step = response.step;
-                currentState.nextStep = response.nextStep;
-                
-                // Clear loading message and show welcome
-                chatMessages.innerHTML = '';
-                addMessage(response.message, 'system');
-                
-                updateQuickOptions();
-                updatePricing(response.pricing, false);
-                updateProgress(response.progress);
-            } catch (error) {
-                showError('Failed to initialize session. Please refresh the page.');
-            }
-        }
-
-        function showError(message) {
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'error-message';
-            errorDiv.textContent = message;
-            chatMessages.appendChild(errorDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-
-        function addMessage(text, type, extraSpacing = false) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${type}-message`;
-
-            if (extraSpacing) {
-                messageDiv.style.marginTop = '-5px';
-            }
-
-            messageDiv.textContent = text;
-            chatMessages.appendChild(messageDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-
-        function handleKeyPress(e) {
-            if (e.key === 'Enter' && chatInput.value.trim()) {
-                selectOption(chatInput.value.trim());
-                chatInput.value = '';
-            }
-        }
-
-        function selectOption(option) {
-
-            console.log('=== SELECT OPTION CALLED ===');
-            console.log('Option selected:', option);
-            console.log('Current step:', currentState.step);
-            console.log('Option type:', typeof option);
-
-            if (option === undefined) {
-        console.error('Option is undefined!');
-        return;
+// ==================== CONVERSATION FLOW DATA ====================
+// In your actual implementation, you would import this from conversation-flow.js
+// For this demo, all conversation flow logic is contained within this component
+const CONVERSATION_FLOW = {
+  budget: {
+    question: "Hi! I'll help you get a kitchen remodel estimate. What's your budget range?",
+    inputType: "choice",
+    required: true,
+    options: [
+      "Under $30,000", 
+      "$30,000 - $60,000", 
+      "$60,000 - $100,000", 
+      "$100,000 - $150,000",
+      "Over $150,000",
+      "I'm not sure yet"
+    ],
+    secondaryMessages: {
+      "Under $30,000": {
+        message: "⚠️ That budget will limit us to mostly cosmetic updates. We'll focus on high-impact changes.",
+        emotion: "concern",
+        timing: "immediate"
+      },
+      "I'm not sure yet": {
+        message: "No problem! This estimate will help you understand typical costs.",
+        emotion: "neutral", 
+        timing: "immediate"
+      }
+    },
+    nextStep: {
+      "Under $30,000": "budget_limited_options",
+      "default": "kitchen_size"
+    },
+    lineItems: [],
+    variables: {
+      "budgetTier": {
+        "Under $30,000": "budget",
+        "$30,000 - $60,000": "moderate", 
+        "$60,000 - $100,000": "standard",
+        "$100,000 - $150,000": "premium",
+        "Over $150,000": "luxury",
+        "I'm not sure yet": "standard"
+      }
     }
+  },
 
-            addMessage(option.name, 'user');
-            processUserInput(option);
-        }
+  budget_limited_options: {
+    question: "For your budget, let's focus on the highest impact changes. What's most important?",
+    inputType: "choice",
+    required: true,
+    options: [
+      "Cabinet refresh (paint + hardware)",
+      "Countertops only", 
+      "Backsplash + paint",
+      "Show me all options anyway"
+    ],
+    nextStep: {
+      "Show me all options anyway": "kitchen_size",
+      "default": "budget_limited_execution"
+    },
+    lineItems: [
+      {
+        condition: "Cabinet refresh (paint + hardware)",
+        items: [
+          { name: "Cabinet Painting", price: 8000, category: "labor" },
+          { name: "Cabinet Hardware", price: 1200, category: "materials" }
+        ]
+      },
+      {
+        condition: "Countertops only", 
+        items: [
+          { name: "Laminate Countertops", price: 6000, category: "materials" },
+          { name: "Countertop Installation", price: 1500, category: "labor" }
+        ]
+      },
+      {
+        condition: "Backsplash + paint",
+        items: [
+          { name: "Basic Backsplash", price: 3000, category: "materials" },
+          { name: "Kitchen Painting", price: 2500, category: "labor" }
+        ]
+      }
+    ]
+  },
 
-        async function processUserInput(input) {
+  budget_limited_execution: {
+    question: "Perfect! Here's your focused estimate. Want to add anything else within budget?",
+    inputType: "choice",
+    required: false,
+    options: ["Add new lighting ($800)", "Add hardware upgrade (+$500)", "That's all", "Start over with full options"],
+    nextStep: {
+      "Start over with full options": "kitchen_size",
+      "default": "complete"
+    },
+    lineItems: [
+      {
+        condition: "Add new lighting ($800)",
+        items: [{ name: "Basic Lighting Update", price: 800, category: "electrical" }]
+      },
+      {
+        condition: "Add hardware upgrade (+$500)", 
+        items: [{ name: "Hardware Upgrade", price: 500, category: "materials" }]
+      }
+    ]
+  },
 
-            console.log('=== PROCESS USER INPUT START ===');
-            console.log('Input received:', input);
+  kitchen_size: {
+    question: "What's your kitchen size? (This determines material quantities)",
+    inputType: "choice",
+    required: true,
+    options: [
+      "Small (up to 100 sq ft)", 
+      "Average (100-200 sq ft)", 
+      "Large (200-300 sq ft)",
+      "Extra Large (300+ sq ft)"
+    ],
+    variables: {
+      "sqft": {
+        "Small (up to 100 sq ft)": 100,
+        "Average (100-200 sq ft)": 150,
+        "Large (200-300 sq ft)": 250,
+        "Extra Large (300+ sq ft)": 350
+      },
+      "sizeMultiplier": {
+        "Small (up to 100 sq ft)": 0.8,
+        "Average (100-200 sq ft)": 1.0,
+        "Large (200-300 sq ft)": 1.4,
+        "Extra Large (300+ sq ft)": 1.8
+      }
+    },
+    nextStep: { "default": "project_scope" },
+    lineItems: []
+  },
 
-            try {
-                console.log('Setting loading states...');
-                quickOptions.classList.add('loading');
-                pricingContent.classList.add('loading');
+  project_scope: {
+    question: "What level of renovation?",
+    inputType: "choice", 
+    required: true,
+    options: [
+      "Cosmetic refresh only",
+      "Partial renovation", 
+      "Full renovation",
+      "Full renovation + layout changes"
+    ],
+    nextStep: {
+      "Cosmetic refresh only": "cosmetic_flow",
+      "default": "cabinets"
+    },
+    lineItems: [
+      {
+        condition: "Full renovation",
+        items: [
+          { 
+            name: "Demolition Labor", 
+            calculation: "multiply",
+            basePrice: 2500,
+            multiplier: "sizeMultiplier",
+            category: "labor" 
+          },
+          { name: "Dumpster Rental", price: 1000, category: "materials" }
+        ]
+      },
+      {
+        condition: "Full renovation + layout changes",
+        items: [
+          { 
+            name: "Demolition + Structural", 
+            calculation: "multiply",
+            basePrice: 4000,
+            multiplier: "sizeMultiplier", 
+            category: "labor" 
+          },
+          { name: "Engineering/Permits", price: 3000, category: "labor" },
+          { name: "Dumpster Rental", price: 1500, category: "materials" }
+        ]
+      }
+    ]
+  },
 
-                console.log('About to make API call with sessionId:', currentState.sessionId);
-                //console.log('Session ID type:', typeof sessionId);
-                ///console.log('Session ID length:', sessionId ? sessionId.length : 'null/undefined');
-                
-                console.log('About to make API call...');
-                const response = await apiCall('/api/chat', {
-                    method: 'POST',
-                    body: {
-                        sessionId: currentState.sessionId,
-                        input: 'Kitchen',
-                        step: currentState.step
-                    }
-                });
+  cosmetic_flow: {
+    question: "For a cosmetic refresh, what would you like to update?",
+    inputType: "multiselect",
+    required: true,
+    options: [
+      "Paint cabinets ($8,000)",
+      "New cabinet hardware ($1,200)", 
+      "Backsplash ($3,500)",
+      "Paint walls ($1,500)",
+      "New lighting ($2,000)",
+      "Cabinet organizers ($1,500)"
+    ],
+    nextStep: { "default": "complete" },
+    lineItems: [
+      {
+        condition: "Paint cabinets ($8,000)",
+        items: [{ name: "Cabinet Painting", price: 8000, category: "labor" }]
+      },
+      {
+        condition: "New cabinet hardware ($1,200)",
+        items: [{ name: "Cabinet Hardware", price: 1200, category: "materials" }]
+      },
+      {
+        condition: "Backsplash ($3,500)", 
+        items: [
+          { name: "Backsplash Materials", price: 1800, category: "materials" },
+          { name: "Backsplash Installation", price: 1700, category: "labor" }
+        ]
+      },
+      {
+        condition: "Paint walls ($1,500)",
+        items: [{ name: "Wall Painting", price: 1500, category: "labor" }]
+      },
+      {
+        condition: "New lighting ($2,000)",
+        items: [{ name: "Lighting Update", price: 2000, category: "electrical" }]
+      },
+      {
+        condition: "Cabinet organizers ($1,500)",
+        items: [{ name: "Cabinet Organizers", price: 1500, category: "materials" }]
+      }
+    ]
+  },
 
-                // After: const response = await apiCall(...);
-                console.log('Response sessionId:', response.sessionId);
-                console.log('Current sessionId before update:', currentState.sessionId);
-                currentState.sessionId = response.sessionId; // Make sure this line exists
-                console.log('Current sessionId after update:', currentState.sessionId);
+  cabinets: {
+    question: "Cabinets are your biggest expense ($25-50k). What's your approach?",
+    inputType: "choice",
+    required: true,
+    options: [
+      "Reface existing cabinets",
+      "Stock cabinets (basic)",
+      "Semi-custom cabinets", 
+      "Full custom cabinets",
+      "Luxury custom cabinets"
+    ],
+    secondaryMessages: {
+      "Reface existing cabinets": {
+        message: "Good budget option if your layout works",
+        timing: "immediate"
+      },
+      "Full custom cabinets": {
+        message: "Best quality, fully customized to your space",
+        timing: "immediate"
+      }
+    },
+    nextStep: { "default": "countertops" },
+    lineItems: [
+      {
+        condition: "Reface existing cabinets",
+        items: [
+          { name: "Cabinet Refacing", price: 8000, category: "materials" },
+          { name: "Custom Cabinet Painting", price: 12000, category: "labor" }
+        ]
+      },
+      {
+        condition: "Stock cabinets (basic)",
+        items: [
+          { 
+            name: "Stock Cabinets", 
+            calculation: "multiply",
+            basePrice: 25000,
+            multiplier: "sizeMultiplier",
+            category: "materials" 
+          },
+          { name: "Cabinet Installation", price: 4000, category: "labor" },
+          { name: "Basic Painting", price: 5000, category: "labor" }
+        ]
+      },
+      {
+        condition: "Semi-custom cabinets",
+        items: [
+          { 
+            name: "Semi-Custom Cabinets",
+            calculation: "multiply", 
+            basePrice: 35000,
+            multiplier: "sizeMultiplier",
+            category: "materials"
+          },
+          { name: "Cabinet Installation", price: 5000, category: "labor" },
+          { name: "Cabinet Painting", price: 8000, category: "labor" }
+        ]
+      },
+      {
+        condition: "Full custom cabinets",
+        items: [
+          { 
+            name: "Custom Cabinets",
+            calculation: "multiply",
+            basePrice: 45000, 
+            multiplier: "sizeMultiplier",
+            category: "materials"
+          },
+          { name: "Custom Installation", price: 6000, category: "labor" },
+          { name: "Custom Cabinet Painting", price: 12000, category: "labor" }
+        ]
+      },
+      {
+        condition: "Luxury custom cabinets",
+        items: [
+          { 
+            name: "Luxury Custom Cabinets",
+            calculation: "multiply",
+            basePrice: 60000,
+            multiplier: "sizeMultiplier", 
+            category: "materials"
+          },
+          { name: "Premium Installation", price: 8000, category: "labor" },
+          { name: "Premium Painting", price: 15000, category: "labor" }
+        ]
+      }
+    ]
+  },
 
-                 console.log('API call completed! Response:', response);
+  countertops: {
+    question: "Countertops ($10-15k range):",
+    inputType: "gallery", 
+    required: true,
+    options: [
+      { 
+        name: "Laminate", 
+        price: 6000,
+        image: "https://images.unsplash.com/photo-1556912173-46c336c7fd55?w=400",
+        description: "Budget option, can chip"
+      },
+      { 
+        name: "Granite",
+        price: 12000, 
+        image: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400",
+        description: "Natural stone, needs annual sealing"
+      },
+      { 
+        name: "Quartz",
+        price: 14000,
+        image: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=400", 
+        description: "Zero maintenance, Tanya's top choice"
+      },
+      { 
+        name: "Quartzite",
+        price: 18000,
+        image: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=400&brightness=110",
+        description: "Premium natural stone, can backlight"
+      }
+    ],
+    secondaryMessages: {
+      "Granite": {
+        message: "⚠️ Granite requires annual re-sealing maintenance",
+        timing: "afterSelection"
+      },
+      "Quartz": {
+        message: "✅ Excellent choice - zero maintenance and uniform appearance", 
+        timing: "afterSelection"
+      }
+    },
+    nextStep: { "default": "appliances" },
+    lineItems: [
+      {
+        condition: "any", 
+        items: [
+          { 
+            name: "Countertops",
+            calculation: "optionPrice",
+            category: "materials"
+          },
+          { name: "Countertop Installation", price: 2000, category: "labor" }
+        ]
+      }
+    ]
+  },
 
-                // ADD THIS DEBUG LOGGING:
-                console.log('=== BACKEND RESPONSE DEBUG ===');
-                console.log('Full response:', response);
-                console.log('Has packages?', !!response.packages);
-                console.log('Current step:', response.step);
-                console.log('Next step config:', response.nextStep);
-                console.log('=== END DEBUG ===');
-                
-                currentState.step = response.step;
-                currentState.data = response.data;
-                currentState.nextStep = response.nextStep;
-                
-                updateProgress(response.progress);
-                
-                // NEW FLOW: Wait 0.5s → Update pricing → Wait 2s → Show conversation
-                setTimeout(() => {
-                    updatePricing(response.pricing, true);
-                    
-                    setTimeout(() => {
-                        if (response.packages) {
-                            showImageGallery('Choose your ' + response.data.room + ' package', response.packages);
-                        } else if (response.messages && response.messages.length > 1) {
-                            response.messages.forEach((message, index) => {
-                                setTimeout(() => {
-                                    const hasExtraSpacing = index === 1;
-                                    addMessage(message, 'system', hasExtraSpacing);
-                                    if (index === response.messages.length - 1) {
-                                        updateQuickOptions();
-                                    }
-                                }, (index + 1) * 1000);
-                            });
-                        } else if (response.message && response.nextStep) {
-                            setTimeout(() => {
-                                addMessage(response.message, 'system');
-                                updateQuickOptions();
-                            }, 500);
-                        } else {
-                            setTimeout(() => {
-                                addMessage('Perfect! Your project estimate is ready.', 'system');
-                                completeProject();
-                            }, 500);
-                        }
-                    }, 2000);
-                }, 500);
-                
-            } catch (error) {
-                console.error('Error processing input:', error);
-            } finally {
-                quickOptions.classList.remove('loading');
-                pricingContent.classList.remove('loading');
-            }
-        }
+  appliances: {
+    question: "Appliances (typically 30% of kitchen cost):",
+    inputType: "choice",
+    required: true,
+    options: [
+      "No appliances (I'll buy separately)",
+      "LG Package - reliable mid-range ($10k)",
+      "GE Cafe - retro styling ($12k)",
+      "Thermador/Wolf - professional ($30k)", 
+      "Sub-Zero + Wolf - luxury ($55k)"
+    ],
+    nextStep: { "default": "complete" },
+    lineItems: [
+      {
+        condition: "LG Package - reliable mid-range ($10k)",
+        items: [
+          { name: "LG Appliance Package", price: 10000, category: "materials" },
+          { name: "Appliance Installation", price: 2000, category: "labor" }
+        ]
+      },
+      {
+        condition: "GE Cafe - retro styling ($12k)",
+        items: [
+          { name: "GE Cafe Package", price: 12000, category: "materials" },
+          { name: "Appliance Installation", price: 2000, category: "labor" }
+        ]
+      },
+      {
+        condition: "Thermador/Wolf - professional ($30k)",
+        items: [
+          { name: "Thermador/Wolf Package", price: 30000, category: "materials" },
+          { name: "Professional Installation", price: 3000, category: "labor" }
+        ]
+      },
+      {
+        condition: "Sub-Zero + Wolf - luxury ($55k)",
+        items: [
+          { name: "Sub-Zero + Wolf Package", price: 55000, category: "materials" },
+          { name: "Luxury Installation", price: 4000, category: "labor" }
+        ]
+      }
+    ]
+  }
+};
 
-        function showImageGallery(title, options) {
+const ALWAYS_INCLUDED = [
+  { 
+    name: "Design Consultation", 
+    price: 0, 
+    category: "design", 
+    description: "Complimentary design consultation" 
+  },
+  {
+    name: "Project Management",
+    price: 0,
+    category: "design", 
+    description: "Basic project coordination"
+  }
+];
 
-            console.log('=== GALLERY DEBUG ===');
-            console.log('Title:', title);
-            console.log('Options received:', options);
-            console.log('Number of options:', options.length);
-
-            document.getElementById('galleryTitle').textContent = title;
-            const galleryOptions = document.getElementById('galleryOptions');
-            galleryOptions.innerHTML = '';
-            
-            options.forEach((option, index) => {
-                console.log(`Processing option ${index}:`, option);
-
-                const optionDiv = document.createElement('div');
-                optionDiv.className = 'gallery-option';
-
-                // Check if its a URL or emoji
-                const isUrl = option.image.startsWith('http');
-
-                let imageHtml;
-                if (isUrl) {
-                    imageHtml = '<img src="' + option.image + '" style="width: 100px; height: 100px; object-fit: cover; border-radius: 4px;" onerror="this.style.display=\'none\';">';
-                } else {
-                    imageHtml = '<div style="font-size: 48px;">' + option.image + '</div>';
-                }
-
-                optionDiv.innerHTML = `
-                    <div style="margin-bottom: 10px;">
-                        ${imageHtml}
-                    </div>
-                    <h4>${option.name}</h4>
-                    <p>+$${option.price.toLocaleString()}</p>
-                    <small style="color: #6c757d;">${option.description}</small>
-                `;
-                optionDiv.onclick = () => {
-                    console.log('CLICK DETECTED on option:', index, option.name);
-                    selectGalleryOption(index, option);
-                };
-
-                console.log('Added click handler for:', option.name);
-                galleryOptions.appendChild(optionDiv);
-            });
-            
-            console.log('Gallery should now be visible');
-            imageGallery.style.display = 'flex';
-        }
-
-        function selectGalleryOption(index, option) {
-
-            console.log('=== GALLERY SELECTION DEBUG ===');
-            console.log('Function called with index:', index);
-            console.log('Function called with option:', option);
-            console.log('selectedGalleryItem before:', selectedGalleryItem);
-
-            document.querySelectorAll('.gallery-option').forEach(el => el.classList.remove('selected'));
-            document.querySelectorAll('.gallery-option')[index].classList.add('selected');
-            selectedGalleryItem = option;
-
-            console.log('selectedGalleryItem after:', selectedGalleryItem);
-            console.log('=== END GALLERY DEBUG ===');
-        }
-
-async function confirmGallerySelection() {
-    console.log('=== CONFIRM SELECTION DEBUG ===');
-    console.log('selectedGalleryItem:', selectedGalleryItem);
-    console.log('Is null?', selectedGalleryItem === null);
+// ==================== CALCULATION ENGINE ====================
+class FlowCalculationEngine {
+  static calculateLineItem(lineItem, sessionVariables, selectedOption = null) {
+    const { calculation, basePrice, price, multiplier, pricePerSqFt, sqftVariable } = lineItem;
     
-    if (!selectedGalleryItem) {
-        console.log('ERROR: No item selected!');
-        return;
+    switch (calculation) {
+      case "multiply":
+        const multiplierValue = sessionVariables[multiplier] || 1;
+        return basePrice * multiplierValue;
+        
+      case "perSqFt":
+        const sqft = sessionVariables[sqftVariable] || 150;
+        return pricePerSqFt * sqft;
+        
+      case "optionPrice":
+        return selectedOption?.price || 0;
+        
+      case "flat":
+      default:
+        return price || basePrice || 0;
+    }
+  }
+  
+  static getNextStep(currentStepName, userInput) {
+    const step = CONVERSATION_FLOW[currentStepName];
+    const nextStepConfig = step.nextStep;
+    
+    if (!nextStepConfig) return "complete";
+    
+    if (nextStepConfig[userInput]) {
+      return nextStepConfig[userInput];
     }
     
-    const selectedItem = selectedGalleryItem;
-    closeGallery();
+    return nextStepConfig.default || "complete";
+  }
+  
+  static shouldShowSecondaryMessage(stepName, userInput, timing = "immediate") {
+    const step = CONVERSATION_FLOW[stepName];
+    const messages = step.secondaryMessages;
     
-    addMessage(`Selected: ${selectedItem.name}`, 'user');
+    if (!messages || !messages[userInput]) return null;
     
-    try {
-        pricingContent.classList.add('loading');
-        
-        const response = await apiCall('/api/chat', {
-            method: 'POST',
-            body: {
-                sessionId: currentState.sessionId,
-                input: selectedItem.name,
-                step: currentState.step,
-                package: selectedItem
-            }
-        });
-        
-        // ADD THIS DEBUGGING:
-        console.log('=== API RESPONSE DEBUG ===');
-        console.log('Full response:', response);
-        console.log('New step:', response.step);
-        console.log('Next step config:', response.nextStep);
-        console.log('Has message?', !!response.message);
-        console.log('Has packages?', !!response.packages);
-        console.log('=== END API RESPONSE DEBUG ===');
-        
-        currentState.step = response.step;
-        currentState.data = response.data;
-        currentState.nextStep = response.nextStep;
-        
-        updateProgress(response.progress);
-        
-        setTimeout(() => {
-            updatePricing(response.pricing, true);
-            
-            setTimeout(() => {
-                // The conversation should continue here
-                if (response.packages) {
-                    showImageGallery('Choose your ' + response.data.room + ' flooring', response.packages);
-                } else if (response.message && response.nextStep) {
-                    addMessage(response.message, 'system');
-                    updateQuickOptions();
-                } else {
-                    addMessage('Perfect! Your project estimate is ready.', 'system');
-                    completeProject();
-                }
-            }, 2000);
-        }, 500);
-        
-    } catch (error) {
-        console.error('Error confirming selection:', error);
-    } finally {
-        pricingContent.classList.remove('loading');
-    }
+    const messageConfig = messages[userInput];
+    if (messageConfig.timing !== timing) return null;
+    
+    return {
+      message: messageConfig.message,
+      emotion: messageConfig.emotion || "neutral"
+    };
+  }
+  
+  static updateSessionVariables(stepName, userInput, sessionVariables) {
+    const step = CONVERSATION_FLOW[stepName];
+    const variables = step.variables;
+    
+    if (!variables) return sessionVariables;
+    
+    const updated = { ...sessionVariables };
+    
+    Object.keys(variables).forEach(variableName => {
+      const mapping = variables[variableName];
+      if (mapping[userInput] !== undefined) {
+        updated[variableName] = mapping[userInput];
+      }
+    });
+    
+    return updated;
+  }
 }
 
-        function closeGallery() {
-            imageGallery.style.display = 'none';
-            selectedGalleryItem = null;
-        }
+// ==================== MAIN COMPONENT ====================
+export default function KitchenEstimator() {
+  const [currentStep, setCurrentStep] = useState('budget');
+  const [sessionData, setSessionData] = useState({});
+  const [sessionVariables, setSessionVariables] = useState({});
+  const [lineItems, setLineItems] = useState([...ALWAYS_INCLUDED]);
+  const [selectedOptions, setSelectedOptions] = useState([]);
+  const [secondaryMessage, setSecondaryMessage] = useState(null);
+  const [conversationHistory, setConversationHistory] = useState([]);
 
-        function completeProject() {
-            quickOptions.innerHTML = `
-                <button class="quick-option" onclick="restartProject()">Start New Project</button>
-                <button class="quick-option" onclick="viewTrace()">View Trace</button>
-            `;
-            chatInput.classList.remove('show');
-        }
+  const currentStepConfig = CONVERSATION_FLOW[currentStep];
 
-        async function restartProject() {
-            try {
-                await initializeSession();
-                chatInput.classList.remove('show');
-            } catch (error) {
-                showError('Error restarting project. Please refresh the page.');
-            }
-        }
+  // ==================== HANDLERS ====================
+  const handleSelection = (selection, selectedOption = null) => {
+    const step = CONVERSATION_FLOW[currentStep];
+    
+    // Update conversation history
+    setConversationHistory(prev => [...prev, {
+      step: currentStep,
+      question: step.question,
+      answer: selection,
+      timestamp: Date.now()
+    }]);
 
-        async function viewTrace() {
-            try {
-                const response = await apiCall(`/api/trace?sessionId=${currentState.sessionId}`);
-                
-                let traceMessage = "**Pricing Calculation Trace:**\n\n";
-                response.traceLog.forEach(log => {
-                    traceMessage += `• ${log}\n`;
-                });
-                
-                traceMessage += "\n**Decision History:**\n";
-                response.history.forEach(entry => {
-                    traceMessage += `• ${entry.step}: ${entry.input}\n`;
-                });
-                
-                addMessage(traceMessage, 'system');
-            } catch (error) {
-                showError('Unable to fetch pricing trace.');
-            }
-        }
+    // Update session data
+    const newSessionData = { ...sessionData, [currentStep]: selection };
+    setSessionData(newSessionData);
 
-        function updateQuickOptions() {
-            const nextStep = currentState.nextStep;
-            if (nextStep && nextStep.options) {
-                quickOptions.innerHTML = '';
-                nextStep.options.forEach(option => {
-                    const button = document.createElement('button');
-                    button.className = 'quick-option';
-                    button.textContent = option;
-                    button.onclick = () => selectOption(option);
-                    quickOptions.appendChild(button);
-                });
-                chatInput.classList.remove('show');
-            } else if (nextStep && nextStep.inputType === 'number') {
-                quickOptions.innerHTML = '';
-                chatInput.classList.add('show');
-                chatInput.placeholder = 'Enter square footage...';
-                chatInput.focus();
-            } else {
-                quickOptions.innerHTML = '';
-                chatInput.classList.remove('show');
-            }
-        }
+    // Update session variables
+    const newVariables = FlowCalculationEngine.updateSessionVariables(
+      currentStep, selection, sessionVariables
+    );
+    setSessionVariables(newVariables);
 
-        // ===== PRICING UPDATE FUNCTIONS =====
-
-        function updatePricing(pricing, animate = true) {
-            if (!pricing) return;
-            
-            const total = pricing.total;
-            const lowerBound = Math.round(total * 0.9);
-            const upperBound = Math.round(total * 1.1);
-            
-            if (!animate) {
-                updatePricingImmediate(pricing, lowerBound, upperBound);
-                return;
-            }
-            
-            updatePricingSequential(pricing, lowerBound, upperBound);
-        }
-
-        function updatePricingImmediate(pricing, lowerBound, upperBound) {
-            lineItems.innerHTML = '';
-            pricing.items.forEach(item => {
-                addLineItem(item, false);
-            });
-            
-            updateTotalLineContent(lowerBound, upperBound);
-        }
-
-        function updatePricingSequential(pricing, lowerBound, upperBound) {
-            const currentItems = Array.from(lineItems.children)
-                .map(el => el.querySelector('span').textContent);
-            
-            const newItems = pricing.items.filter(item => 
-                !currentItems.includes(item.name)
+    // Add line items based on selection
+    const newLineItems = [...lineItems];
+    
+    if (step.lineItems) {
+      step.lineItems.forEach(lineItemGroup => {
+        if (shouldAddLineItems(lineItemGroup, selection)) {
+          lineItemGroup.items.forEach(item => {
+            const calculatedPrice = FlowCalculationEngine.calculateLineItem(
+              item, newVariables, selectedOption
             );
             
-            addItemsSequentially(newItems, 0, () => {
-                setTimeout(() => {
-                    updateTotalLineContent(lowerBound, upperBound, true);
-                }, 500);
+            newLineItems.push({
+              ...item,
+              calculatedPrice,
+              stepName: currentStep,
+              userChoice: selection,
+              id: `${currentStep}-${item.name}-${Date.now()}`
             });
+          });
         }
+      });
+    }
 
-        function addItemsSequentially(items, index, callback) {
-            if (index >= items.length) {
-                callback();
-                return;
-            }
-            
-            const item = items[index];
-            addLineItem(item, true);
-            
-            setTimeout(() => {
-                addItemsSequentially(items, index + 1, callback);
-            }, 500);
-        }
+    // Handle always include items from step
+    if (step.alwaysInclude) {
+      step.alwaysInclude.forEach(item => {
+        const calculatedPrice = FlowCalculationEngine.calculateLineItem(
+          item, newVariables
+        );
+        newLineItems.push({
+          ...item,
+          calculatedPrice,
+          stepName: currentStep,
+          userChoice: selection,
+          id: `${currentStep}-always-${item.name}-${Date.now()}`
+        });
+      });
+    }
 
-        function addLineItem(item, withHighlight) {
-            const itemDiv = document.createElement('div');
-            itemDiv.className = 'line-item';
-            
-            if (withHighlight) {
-                itemDiv.classList.add('highlight-new');
-            }
-            
-            itemDiv.innerHTML = `
-                <span>${item.name}</span>
-                <span>${item.note || `$${item.price.toLocaleString()}`}</span>
-            `;
-            
-            if (item.breakdown) {
-                itemDiv.title = item.breakdown;
-            }
-            
-            lineItems.appendChild(itemDiv);
-            
-            if (withHighlight) {
-                setTimeout(() => {
-                    itemDiv.classList.remove('highlight-new');
-                }, 1000);
-            }
-        }
+    setLineItems(newLineItems);
 
-        function updateTotalLineContent(lowerBound, upperBound, withHighlight = false) {
-            const totalText = lowerBound > 0 ? 
-                `$${lowerBound.toLocaleString()} - $${upperBound.toLocaleString()}` : 
-                '$0 - $0';
-            
-            totalLine.querySelector('span:last-child').textContent = totalText;
-            
-            if (withHighlight) {
-                totalLine.classList.add('highlight-new');
-                setTimeout(() => {
-                    totalLine.classList.remove('highlight-new');
-                }, 1000);
-            }
-        }
+    // Show secondary message if exists
+    const message = FlowCalculationEngine.shouldShowSecondaryMessage(
+      currentStep, selection, "immediate"
+    );
+    setSecondaryMessage(message);
 
-        function updateProgress(progress) {
-            if (!progress) return;
-            
-            progressFill.style.width = progress.progress + '%';
-            progressText.textContent = progress.text;
-        }
+    // Move to next step after a brief delay
+    setTimeout(() => {
+      const nextStep = FlowCalculationEngine.getNextStep(currentStep, selection);
+      if (nextStep !== "complete") {
+        setCurrentStep(nextStep);
+        setSecondaryMessage(null);
+      }
+    }, message ? 2000 : 500);
+  };
 
-        function setupSquareFootageValidation(inputId) {
-            const input = document.getElementById(inputId);
-            if (!input) return;
+  const handleMultiSelect = (selections) => {
+    const step = CONVERSATION_FLOW[currentStep];
+    
+    // Update conversation history
+    setConversationHistory(prev => [...prev, {
+      step: currentStep,
+      question: step.question,
+      answer: selections.join(', '),
+      timestamp: Date.now()
+    }]);
 
-            // Create error message
-            const errorDiv = document.createElement('div');
-            errorDiv.style.cssText = 'color: red; font-size: 14px; margin-top: 5px; display: none;';
-            errorDiv.textContent = 'Digits only please';
-            input.parentNode.insertBefore(errorDiv, input.nextSibling);
+    // Update session data
+    const newSessionData = { ...sessionData, [currentStep]: selections };
+    setSessionData(newSessionData);
 
-            // Add shake animation CSS
-            if (!document.getElementById('shake-style')) {
-                const style = document.createElement('style');
-                style.id = 'shake-style';
-                style.textContent = '@keyframes shake { 0%, 50%, 100% { transform: translateX(0); } 25%, 75% { transform: translateX(-5px); } } .shake { animation: shake 0.5s; }';
-                document.head.appendChild(style);
-            }
-
-            input.addEventListener('input', function(e) {
-                const value = e.target.value;
-                
-                // Check if contains non-digits
-                if (/[^0-9]/.test(value)) {
-                    // Remove non-digits
-                    e.target.value = value.replace(/[^0-9]/g, '');
-                    
-                    // Show error and shake
-                    errorDiv.style.display = 'block';
-                    input.classList.add('shake');
-                    setTimeout(() => {
-                        input.classList.remove('shake');
-                        errorDiv.style.display = 'none';
-                    }, 2000);
-                }
+    // Add line items for each selection
+    const newLineItems = [...lineItems];
+    
+    selections.forEach(selection => {
+      if (step.lineItems) {
+        step.lineItems.forEach(lineItemGroup => {
+          if (shouldAddLineItems(lineItemGroup, selection)) {
+            lineItemGroup.items.forEach(item => {
+              const calculatedPrice = FlowCalculationEngine.calculateLineItem(
+                item, sessionVariables
+              );
+              
+              newLineItems.push({
+                ...item,
+                calculatedPrice,
+                stepName: currentStep,
+                userChoice: selection,
+                id: `${currentStep}-${item.name}-${selection}-${Date.now()}`
+              });
             });
-        }
+          }
+        });
+      }
+    });
 
-   
-            setupSquareFootageValidation('chatInput');
-        
+    setLineItems(newLineItems);
 
-        // Initialize
-        function init() {
-            chatInput.addEventListener('keypress', handleKeyPress);
-            console.log('Chat initialized with API:', WORKER_URL);
-            initializeSession();
-        }
+    // Move to next step
+    setTimeout(() => {
+      const nextStep = FlowCalculationEngine.getNextStep(currentStep, selections[0] || "default");
+      if (nextStep !== "complete") {
+        setCurrentStep(nextStep);
+      }
+    }, 500);
+  };
 
-        // Start the app
-        init();
-    </script>
-</body>
-</html>
+  const shouldAddLineItems = (lineItemGroup, selection) => {
+    const condition = lineItemGroup.condition;
+    
+    if (!condition || condition === "any") return true;
+    if (condition === selection) return true;
+    if (condition.startsWith("not ") && selection !== condition.substring(4)) return true;
+    
+    return false;
+  };
+
+  // ==================== CALCULATE TOTALS ====================
+  const calculateTotals = () => {
+    const categories = {};
+    let total = 0;
+
+    lineItems.forEach(item => {
+      const price = item.calculatedPrice || item.price || 0;
+      total += price;
+      
+      if (!categories[item.category]) {
+        categories[item.category] = 0;
+      }
+      categories[item.category] += price;
+    });
+
+    return { categories, total };
+  };
+
+  const { categories, total } = calculateTotals();
+
+  // ==================== RENDER COMPONENTS ====================
+  const renderInput = () => {
+    if (!currentStepConfig) return null;
+
+    switch (currentStepConfig.inputType) {
+      case "choice":
+        return (
+          <div className="space-y-3">
+            {currentStepConfig.options.map((option, index) => (
+              <button
+                key={index}
+                onClick={() => handleSelection(option)}
+                className="w-full p-4 text-left border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all duration-200 group"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-gray-900">{option}</span>
+                  <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-blue-500" />
+                </div>
+              </button>
+            ))}
+          </div>
+        );
+
+      case "multiselect":
+        return <MultiSelectInput options={currentStepConfig.options} onSubmit={handleMultiSelect} />;
+
+      case "gallery":
+        return <GalleryInput options={currentStepConfig.options} onSelect={handleSelection} />;
+
+      default:
+        return null;
+    }
+  };
+
+  const getCategoryIcon = (category) => {
+    switch (category) {
+      case "materials": return <Package className="w-4 h-4" />;
+      case "labor": return <Wrench className="w-4 h-4" />;
+      case "electrical": return <Zap className="w-4 h-4" />;
+      case "design": return <Palette className="w-4 h-4" />;
+      default: return <DollarSign className="w-4 h-4" />;
+    }
+  };
+
+  if (currentStep === "complete") {
+    return <CompletePage total={total} categories={categories} lineItems={lineItems} />;
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="mb-8 text-center">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Kitchen Remodel Estimator</h1>
+          <p className="text-gray-600">Get a detailed cost estimate for your kitchen renovation</p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* LEFT SIDE: Conversation Flow */}
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <div className="mb-6">
+              <div className="flex items-center space-x-2 mb-4">
+                <Home className="w-6 h-6 text-blue-600" />
+                <h2 className="text-xl font-semibold text-gray-900">Step {Object.keys(sessionData).length + 1}</h2>
+              </div>
+              
+              <h3 className="text-lg font-medium text-gray-800 mb-4">
+                {currentStepConfig?.question}
+              </h3>
+
+              {secondaryMessage && (
+                <div className={`mb-4 p-3 rounded-lg border-l-4 ${
+                  secondaryMessage.emotion === 'concern' 
+                    ? 'bg-amber-50 border-amber-400 text-amber-800' 
+                    : 'bg-blue-50 border-blue-400 text-blue-800'
+                }`}>
+                  <div className="flex items-center space-x-2">
+                    {secondaryMessage.emotion === 'concern' ? 
+                      <AlertCircle className="w-4 h-4" /> : 
+                      <CheckCircle className="w-4 h-4" />
+                    }
+                    <span className="text-sm">{secondaryMessage.message}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {renderInput()}
+
+            {/* Conversation History */}
+            {conversationHistory.length > 0 && (
+              <div className="mt-8 pt-6 border-t border-gray-200">
+                <h4 className="text-sm font-medium text-gray-500 mb-3">Previous Answers</h4>
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {conversationHistory.slice(-3).map((item, index) => (
+                    <div key={index} className="text-sm">
+                      <span className="text-gray-600">{item.question.substring(0, 40)}...</span>
+                      <span className="ml-2 font-medium text-gray-900">{item.answer}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* RIGHT SIDE: Line Items & Total */}
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <div className="flex items-center space-x-2 mb-6">
+              <Calculator className="w-6 h-6 text-green-600" />
+              <h2 className="text-xl font-semibold text-gray-900">Cost Breakdown</h2>
+            </div>
+
+            {/* Category Totals */}
+            <div className="mb-6 space-y-3">
+              {Object.entries(categories).map(([category, amount]) => (
+                <div key={category} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    {getCategoryIcon(category)}
+                    <span className="font-medium text-gray-700 capitalize">{category}</span>
+                  </div>
+                  <span className="font-semibold text-gray-900">
+                    ${amount.toLocaleString()}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* Total */}
+            <div className="border-t border-gray-200 pt-4 mb-6">
+              <div className="flex items-center justify-between text-xl font-bold">
+                <span className="text-gray-900">Total Estimate</span>
+                <span className="text-green-600">${total.toLocaleString()}</span>
+              </div>
+            </div>
+
+            {/* Line Items Detail */}
+            <div className="max-h-80 overflow-y-auto">
+              <h4 className="text-sm font-medium text-gray-500 mb-3">Detailed Items</h4>
+              <div className="space-y-2">
+                {lineItems.map((item, index) => (
+                  <div key={item.id || index} className="flex justify-between text-sm py-2 border-b border-gray-100">
+                    <span className="text-gray-700">{item.name}</span>
+                    <span className="font-medium text-gray-900">
+                      ${(item.calculatedPrice || item.price || 0).toLocaleString()}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ==================== SUB COMPONENTS ====================
+function MultiSelectInput({ options, onSubmit }) {
+  const [selected, setSelected] = useState([]);
+
+  const toggleOption = (option) => {
+    setSelected(prev => 
+      prev.includes(option) 
+        ? prev.filter(item => item !== option)
+        : [...prev, option]
+    );
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        {options.map((option, index) => (
+          <label key={index} className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
