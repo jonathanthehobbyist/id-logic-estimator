@@ -97,6 +97,12 @@ export class SimpleConversationEngine {
   
   static validateInput(stepName, userInput) {
     const stepConfig = CONVERSATION_FLOW[stepName];
+
+    console.log('=== WORKER VALIDATION ===');
+    console.log('Step:', stepName);
+    console.log('Input received:', JSON.stringify(userInput));
+    console.log('Valid options:', JSON.stringify(stepConfig.options));
+
     
     if (!stepConfig) {
       return { valid: false, error: `Unknown step: ${stepName}` };
